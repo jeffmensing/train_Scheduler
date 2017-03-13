@@ -1,3 +1,15 @@
 .main-container {
     min-width: 800px;
 }
+
+.jumbotron {
+    content: align;
+}
+
+body {
+    background: url(../images/Freight-Train.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
