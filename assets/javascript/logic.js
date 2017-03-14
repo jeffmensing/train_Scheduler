@@ -8,16 +8,11 @@ var config = {
     messagingSenderId: "660389315770",
 };
 firebase.initializeApp(config);
+
 var trainName = "";
 var trainDestination = "";
 var firstTrainTime = "";
 var frequency = "";
-var currentTime = "";
-var convertFirstTrainTime = "";
-var difference = "";
-var remainder = "";
-var minTillNextTrain = "";
-var nextTrain = "";
 var database = firebase.database();
 
 //$(document).ready(function() {
@@ -27,56 +22,53 @@ $("#add-train").on("click", function() {
     //Get User Input
     trainName = $("#name-input").val().trim();
     trainDestination = $("#destination-input").val().trim();
-    firstTrainTime = $("#first-train-time-input").val().trim();
+    firstTrainTime = moment($("#first-train-time-input").val().trim(), "HH:mm").subtract(10, "years").format("X");
     frequency = $("#frequency-input").val().trim();
-    console.log("on Click: " + trainName);
-    console.log("on Click: " + trainDestination);
-    console.log("on Click: " + firstTrainTime);
-    console.log("on Click: " + frequency);
-    convertFirstTrainTime = moment(firstTrainTime, "hh:mm").subtract(1, "years");
-    console.log("convertedFirstTrainTme: " + convertFirstTrainTime);
-    currentTime = moment();
-    console.log("currentTime: " + currentTime);
-    difference = moment().diff(moment(convertFirstTrainTime, "minutes"));
-    console.log("difference: " + difference);
-    remainder = difference % frequency;
-    console.log("remainder: " + remainder);
-    minTillNextTrain = frequency - remainder;
-    console.log("minTillNextTrain: " + minTillNextTrain)
-    nextTrain = moment().add(minTillNextTrain, "minutes");
-    console.log("on Click nextTrain: " + nextTrain);
-    nextTrain = moment(nextTrain).format("hh:mm");
-    console.log("on Click: nextTrain formated " + nextTrain);
+
     firebase.database().ref().push({
         name: trainName,
         destination: trainDestination,
-        firstTrainTime: firstTrainTime,frequency: frequency,
+        firstTrainTime: firstTrainTime,
+        frequency: frequency,
+    });
 
-        nextTrain: nextTrain
-    })
+    $("#name-input").val("");
+    $("#destination-input").val("");
+    $("#first-train-time-input").val("");
+    $("#frequency-input").val("");
+
 
     return false;
 
-    //convert first train time
-
-    //get current time 
-    //currentTime = moment();
-    //find the difference between first and current
-    //derive next train time
-    //derive minutes untill next train
-
-    //push data to firebase
-
-    //display information to page
 });
 
 database.ref().on("child_added", function(childSnapshot, prevChildKey) {
-    //        $(".train-schedule").append("<tr class='table-row' id=" + "'" + childSnapshot.key() + "'" + ">" + "<td class ='col-xs-3'>" + childSnapshot.val().name + "</td>" +
-    $(".train-schedule").append("<tr class='table-row'><td class ='col-xs-3'>" + childSnapshot.val().name + "</td>" +
-        "<td class ='col-xs-3'>" + childSnapshot.val().destination + "</td>" +
-        "<td class ='col-xs-2'>" + childSnapshot.val().frequency + "</td>" +
-        "<td class ='col-xs-2'>" + childSnapshot.val().nextTrain + "</td>" +
-        "<td class ='col-xs-2'>" + minTillNextTrain + "</td></tr>");
+
+    console.log(childSnapshot.val());
+    var trainName = childSnapshot.val().name;
+    var tDestination = childSnapshot.val().destination;
+    var tFrequency = childSnapshot.val().frequency;
+    var firstTrain = childSnapshot.val().firstTrainTime;
+
+    console.log(firstTrain);
+    console.log(tFrequency);
+
+    //Calculate minutes to arrival. Current time (unix) subtract firsTrain time
+    //and then find the modulus between the difference and the frequency
+    var difference = moment().diff(moment.unix(firstTrain), "minutes");
+    console.log(difference);
+    var trainRemainder = moment().diff(moment.unix(firstTrain), "minutes") % tFrequency;
+    console.log(trainRemainder);
+    var trainMinutes = tFrequency - trainRemainder;
+    console.log(trainMinutes);
+    var trainArrival = moment().add(trainMinutes, "m").format("hh:mm A");
+    console.log(trainArrival);
+
+    $(".train-schedule").append("<tr class='table-row'><td class ='col-xs-3'>" + trainName + "</td>" +
+        "<td class ='col-xs-3'>" + tDestination + "</td>" +
+        "<td class ='col-xs-2'>" + tFrequency + "</td>" +
+        "<td class ='col-xs-2'>" + trainArrival + "</td>" +
+        "<td class ='col-xs-2'>" + trainMinutes + "</td></tr>");
 
 });
 
